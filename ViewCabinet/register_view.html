@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Registreren - De Speelkast</title>
+</head>
+<body>
+    <main>
+        <h1>Registreren</h1>
+        <p role="status"><!-- Registratiemelding --></p>
+        <form action="../ControllerCabinet/AuthController.php" method="post">
+            <label for="username">Gebruikersnaam</label>
+            <input id="username" name="username" type="text" pattern="[A-Za-z]{4,15}" aria-describedby="username-help" required>
+            <small id="username-help" hidden></small>
+            <label for="password"><br>Wachtwoord</label>
+            <input id="password" name="password" type="password" pattern="[A-Za-z0-9]{6,15}" aria-describedby="password-help" required>
+            <small id="password-help" hidden></small><br>
+            <button type="submit" name="action" value="register">Registreren</button>
+        </form>
+        <p><a href="login_view.html">Terug naar inloggen</a></p>
+    </main>
+    <script>
+        [
+            ['username', 'username-help', 'Gebruik 4 tot 15 letters (A-Z).'],
+            ['password', 'password-help', 'Gebruik 6 tot 15 letters en/of cijfers.']
+        ].forEach(([inputId, helpId, helpText]) => {
+            const input = document.getElementById(inputId);
+            const help = document.getElementById(helpId);
+            input.addEventListener('blur', () => {
+                help.textContent = input.validity.valid
+                    ? 'Input geldig.'
+                    : helpText;
+                help.hidden = false;
+            });
+        });
+    </script>
+</body>
+</html>
