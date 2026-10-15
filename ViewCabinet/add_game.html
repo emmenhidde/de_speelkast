@@ -1,0 +1,152 @@
+<h2>Voeg een nieuw spel toe</h2>
+<!-- Formulier voor spelgegevens en een aparte uploadstap voor de doosfoto -->
+<form id="game-form" action="indexFile.php?page=add-game" method="post" enctype="multipart/form-data" data-image-uploaded="{{image_uploaded}}" novalidate>
+    <label for="game-title">Spelnaam:</label>
+    <input id="game-title" name="title" type="text" maxlength="255" pattern="[A-Za-z0-9 .,;:_?| -]+" value="{{game_title}}" required>
+    <label for="game-type"><br>Speltype:</label>
+    <input id="game-type" name="type" type="text" maxlength="100" pattern="[A-Za-z0-9 .,;:_?| -]+" value="{{game_type}}" required>
+    <label for="min-players"><br>Minimumaantal spelers:</label>
+    <input id="min-players" name="min_players" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="{{min_players}}" required>
+    <label for="max-players"><br>Maximumaantal spelers (leeg als onbekend):</label>
+    <input id="max-players" name="max_players" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="{{max_players}}">
+    <label for="is-board-game"><br>Is dit een bordspel:</label>
+    <label class="switch">
+        <input id="is-board-game" name="is_board_game" type="checkbox" value="1"{{board_checked}}>
+        <span class="NoBoardG">Nee</span>
+        <span class="YesBoardG">Ja</span>
+    </label>
+    <fieldset id="board-fields"{{board_disabled}}>
+        <legend>Bordspelgegevens</legend>
+        <label for="board-width">Bordbreedte in cm:</label>
+        <input id="board-width" name="board_width" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="{{board_width}}" required>
+        <label for="board-height"><br>Bordhoogte in cm:</label>
+        <input id="board-height" name="board_height" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="{{board_height}}" required>
+    </fieldset>
+    <label for="has-expansion"><br>Heeft dit spel een uitbreiding:</label>
+    <label class="switch">
+        <input id="has-expansion" name="has_expansion" type="checkbox" value="1"{{expansion_checked}}>
+        <span class="NoExtend">Nee</span>
+        <span class="YesExtend">Ja</span>
+    </label>
+    <fieldset id="expansion-fields"{{expansion_disabled}}>
+        <legend>Uitbreidingsgegevens</legend>
+        <label for="extension-game">Naam van de uitbreiding:</label>
+        <input id="extension-game" name="extension_game" type="text" maxlength="255" pattern="[A-Za-z0-9 .,;:_?| -]+" value="{{extension_game}}" required>
+        <label for="expansion-min-players"><br>Minimumaantal spelers met uitbreiding:</label>
+        <input id="expansion-min-players" name="expansion_min_players" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="{{expansion_min_players}}" required>
+        <label for="expansion-max-players"><br>Maximumaantal spelers met uitbreiding (leeg als onbekend):</label>
+        <input id="expansion-max-players" name="expansion_max_players" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="{{expansion_max_players}}">
+    </fieldset>
+    <label for="game-image"><br>Foto van de doos:</label>
+    <input type="file" name="file" id="game-image" accept="image/jpeg,image/png,image/gif">
+    <p>{{photo_status}}</p>
+    <p id="game-form-message" role="status">{{game_form_message}}</p>
+    <button type="submit" name="action" value="upload_game_image" formnovalidate>Uploaden</button>
+    <button type="submit" name="action" value="add_game">Voeg het spel toe aan de speelkast</button>
+</form>
+<!-- Opmaak voor de bestaande Ja/Nee-schakelaars -->
+<style>
+    .switch {
+        display: inline-flex;
+        position: relative;
+        background: #ddd;
+        border-radius: 20px;
+        cursor: pointer;
+    }
+
+    .switch input {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .switch span {
+        width: 40px;
+        padding: 2px 0;
+        text-align: center;
+        z-index: 1;
+    }
+    .switch {
+        transform: scale(0.85);
+    }
+    .switch::before {
+        content: "";
+        position: absolute;
+        width: 40px;
+        height: 100%;
+        background: #b8ccf5;
+        border-radius: 20px;
+        transition: transform 0.2s;
+    }
+
+    .switch:has(input:checked)::before {
+        transform: translateX(40px);
+    }
+</style>
+<!-- Verweking en JS controle invoer -->
+<script>
+    const boardToggle = document.getElementById('is-board-game');
+    boardToggle.addEventListener('change', function () {
+        const fields = document.getElementById('board-fields');
+        fields.hidden = !this.checked;
+        fields.disabled = !this.checked;
+    });
+    boardToggle.dispatchEvent(new Event('change'));
+
+    const expansionToggle = document.getElementById('has-expansion');
+    expansionToggle.addEventListener('change', function () {
+        const fields = document.getElementById('expansion-fields');
+        fields.hidden = !this.checked;
+        fields.disabled = !this.checked;
+    });
+    expansionToggle.dispatchEvent(new Event('change'));
+
+    function validateMaximum(minimum, maximum) {
+        maximum.setCustomValidity(
+            maximum.value !== '' && Number(maximum.value) < Number(minimum.value)
+                ? 'Maximum moet minstens het minimum zijn.'
+                : ''
+        );
+    }
+
+    const playerLimits = [
+        ['min-players', 'max-players'],
+        ['expansion-min-players', 'expansion-max-players']
+    ].map(([minimumId, maximumId]) => {
+        const minimum = document.getElementById(minimumId);
+        const maximum = document.getElementById(maximumId);
+        [minimum, maximum].forEach(input => {
+            input.addEventListener('input', () => validateMaximum(minimum, maximum));
+        });
+        return [minimum, maximum];
+    });
+
+    document.getElementById('game-form').addEventListener('submit', function (event) {
+        const action = event.submitter.value;
+        const image = document.getElementById('game-image');
+        const message = document.getElementById('game-form-message');
+
+        if (action === 'upload_game_image') {
+            if (image.files.length === 0) {
+                event.preventDefault();
+                image.setCustomValidity('Selecteer eerst een doosfoto.');
+                image.reportValidity();
+            } else {
+                image.setCustomValidity('');
+            }
+            return;
+        }
+
+        playerLimits.forEach(([minimum, maximum]) => validateMaximum(minimum, maximum));
+        if (this.dataset.imageUploaded !== '1') {
+            event.preventDefault();
+            message.textContent = 'Upload eerst een doosfoto.';
+            return;
+        }
+
+        if (!this.checkValidity()) {
+            event.preventDefault();
+            this.reportValidity();
+            message.textContent = 'Controleer de ingevulde gegevens.';
+        }
+    });
+</script>

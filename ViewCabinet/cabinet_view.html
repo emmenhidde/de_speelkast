@@ -7,21 +7,22 @@
 </head>
 <body>
     <main>
-        <h1>Spellenkast van <!-- Gebruikersnaam --></h1>
-        <p>Je bent ingelogd als: <!-- Gebruikersnaam --></p>
-        <form action="../ControllerCabinet/LogoutController.php" method="post">
-        <button type="submit">Uitloggen</button>
+        <h1>Spellenkast van {{username}}</h1>
+        <p>Je bent ingelogd als: {{username}}</p>
+        <form action="indexFile.php?page=logout" method="post">
+            <button type="submit">Uitloggen</button>
         </form>
-
-<hr>
-        <h2>Spellen in de kast</h2>
-<!-- //TODO: Lijst van spellen met box als thumbnail, met beschrijving -->
-
-<hr>
-        <h2>Voeg een nieuw spel toe</h2>
-<!-- //TODO: Form toevoegen om van spellen met box als thumbnail toe te voegen -->
-<hr>
-        <h2>Exporteer selectie naar XML</h2>
-<!-- //TODO: Voeg een manier toe om spellen te selecteren om deze naar xml te exporteren -->
+        <hr>
+        <!-- Gedeelde navigatie naar de kastsubpagina's -->
+        <nav>
+            <a href="indexFile.php?page=select-games" aria-current="{{select_games_current}}" style="display: inline-block; background-color: #b8ccf5; border: 1px solid black; border-radius: 3px; padding: 4px;">Selecteer spellen</a>
+            <a href="indexFile.php?page=my-selection" aria-current="{{my_selection_current}}" style="display: inline-block; background-color: #b8ccf5; border: 1px solid black; border-radius: 3px; padding: 4px;">Mijn selectie</a>
+            <a href="indexFile.php?page=add-game" aria-current="{{add_game_current}}" style="display: inline-block; background-color: #b8ccf5; border: 1px solid black; border-radius: 3px; padding: 4px;">Spel toevoegen</a>
+        </nav>
+        <!-- PageController plaatst hier de gekozen subpagina -->
+        <section>
+            {{content}}
+        </section>
+    </main>
 </body>
 </html>

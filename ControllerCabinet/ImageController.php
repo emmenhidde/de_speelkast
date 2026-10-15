@@ -3,7 +3,7 @@
 class ImageController
 {
     public function __construct(
-        private string $uploadDir = __DIR__ . '/upload/'
+        private string $uploadDir = __DIR__ . '/../upload/'
     ) {
     }
 
@@ -13,7 +13,7 @@ class ImageController
             throw new RuntimeException('Kies eerst een bestand.');
         }
 
-        if ($file['size'] > 2 * 1024 * 1024) {
+        if (!isset($file['size'], $file['name'], $file['tmp_name']) || $file['size'] > 2 * 1024 * 1024) {
             throw new RuntimeException('Het bestand mag maximaal 2 MB zijn.');
         }
 
@@ -34,6 +34,10 @@ class ImageController
             throw new RuntimeException('Kies een JPG-, PNG- of GIF-afbeelding.');
         }
 
+        if (!is_dir($this->uploadDir) && !mkdir($this->uploadDir, 0775, true) && !is_dir($this->uploadDir)) {
+            throw new RuntimeException('De uploadmap kon niet worden aangemaakt.');
+        }
+
         $fileName = uniqid('', true) . '.' . $extension;
         $destination = rtrim($this->uploadDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $fileName;
 
@@ -42,16 +46,5 @@ class ImageController
         }
 
         return $fileName;
-    }
-}
-
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
-    try {
-        $controller = new ImageController();
-        $fileName = $controller->uploadImage($_FILES['file'] ?? []);
-        echo 'Bestand geüpload: ' . htmlspecialchars($fileName, ENT_QUOTES, 'UTF-8');
-    } catch (RuntimeException $exception) {
-        http_response_code(400);
-        echo htmlspecialchars($exception->getMessage(), ENT_QUOTES, 'UTF-8');
     }
 }

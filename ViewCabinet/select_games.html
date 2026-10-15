@@ -1,0 +1,16 @@
+<h2>Spellen in de kast</h2>
+<p role="status">{{message}}</p>
+<form action="indexFile.php?page=select-games" method="post">
+    <input type="hidden" name="action" value="update_selection">
+    <table style="width: 100%; border-spacing: 0 8px; text-align: left;">
+        <colgroup>
+            <col style="width: 40px;">
+            <col style="width: 120px;">
+            <col>
+        </colgroup>
+        <tbody>
+            {{items}}
+        </tbody>
+    </table>
+    <button type="submit">Selectie bijwerken</button>
+</form>

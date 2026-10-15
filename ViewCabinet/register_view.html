@@ -8,18 +8,20 @@
 <body>
     <main>
         <h1>Registreren</h1>
-        <p role="status"><!-- Registratiemelding --></p>
-        <form action="../ControllerCabinet/AuthController.php" method="post">
+        <p role="status">{{message}}</p>
+        <!-- Registratiegegevens met invoerfeedback die pas na blur zichtbaar wordt -->
+        <form action="indexFile.php?page=register" method="post">
             <label for="username">Gebruikersnaam</label>
             <input id="username" name="username" type="text" pattern="[A-Za-z]{4,15}" aria-describedby="username-help" required>
-            <small id="username-help" hidden></small>
-            <label for="password"><br>Wachtwoord</label>
+            <small id="username-help" hidden></small><br>
+            <label for="password">Wachtwoord</label>
             <input id="password" name="password" type="password" pattern="[A-Za-z0-9]{6,15}" aria-describedby="password-help" required>
             <small id="password-help" hidden></small><br>
             <button type="submit" name="action" value="register">Registreren</button>
         </form>
-        <p><a href="login_view.html">Terug naar inloggen</a></p>
+        <p><a href="indexFile.php?page=login">Terug naar inloggen</a></p>
     </main>
+    <!-- Toont per veld of de invoer bij het verlaten van dat veld geldig is -->
     <script>
         [
             ['username', 'username-help', 'Gebruik 4 tot 15 letters (A-Z).'],

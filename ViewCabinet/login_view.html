@@ -5,21 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Inloggen - De Speelkast</title>
 </head>
-
 <body>
     <main>
         <h1>Inloggen</h1>
-        <p role="status"><!-- Loginmelding --></p>
-        <form action="../ControllerCabinet/AuthController.php" method="post">
+        <p role="status">{{message}}</p>
+        <form action="indexFile.php?page=login" method="post">
             <label for="username">Gebruikersnaam</label>
             <input id="username" name="username" type="text" pattern="[A-Za-z]{4,15}" aria-describedby="username-help" required>
-            <small id="username-help" hidden></small>
-            <label for="password"><br>Wachtwoord</label>
+            <small id="username-help" hidden></small><br>
+            <label for="password">Wachtwoord</label>
             <input id="password" name="password" type="password" pattern="[A-Za-z0-9]{6,15}" aria-describedby="password-help" required>
             <small id="password-help" hidden></small><br>
             <button type="submit" name="action" value="login">Inloggen</button>
         </form>
-        <p><a href="register_view.html">Maak een nieuw account aan</a></p>
+        <p><a href="indexFile.php?page=register">Maak een nieuw account aan</a></p>
     </main>
     <script>
         [
@@ -29,9 +28,7 @@
             const input = document.getElementById(inputId);
             const help = document.getElementById(helpId);
             input.addEventListener('blur', () => {
-                help.textContent = input.validity.valid
-                    ? ''
-                    : helpText;
+                help.textContent = input.validity.valid ? '' : helpText;
                 help.hidden = false;
             });
         });
