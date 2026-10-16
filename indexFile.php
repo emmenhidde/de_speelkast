@@ -11,6 +11,7 @@ require_once __DIR__ . '/ControllerCabinet/ItemController.php';
 require_once __DIR__ . '/ControllerCabinet/NewGameController.php';
 require_once __DIR__ . '/ControllerCabinet/ImageController.php';
 require_once __DIR__ . '/ControllerCabinet/PageController.php';
+require_once __DIR__ . '/ControllerCabinet/Arr2XMLController.php';
 
 // Maakt de controller die de HTML-pagina's gaat opbouwen
 $pageController = new PageController();
@@ -22,7 +23,6 @@ function isPendingGameImageName(mixed $fileName): bool
         && basename($fileName) === $fileName
         && preg_match('/\A[a-f0-9.]+\.(jpg|jpeg|png|gif)\z/i', $fileName) === 1;
 }
-
 
 // Start de sessie voordat de router gebruikersstatus controleert
 SessionKeeper::startSession();
@@ -131,6 +131,31 @@ $gameFormMessage = $page === 'add-game' ? $message : '';
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $action = $_POST['action'] ?? '';
 
+    // Verwerkt de exportknoppen onderaan de selectiepagina
+    if ($page === 'my-selection' && $action === 'export_xml') {
+        $items = $itemController->findAll();
+        $selectedIds = $itemController->findSelectedGameIds($username);
+
+        $selectedItems = array_values(array_filter(
+            $items,
+            static fn(array $item): bool =>
+                in_array((int) $item['id'], $selectedIds, true)
+        ));
+
+        // Uitbreidingen hebben hun eigen opgeslagen selectie
+        $extensions = $itemController->findAllExtensions();
+        $extensionIds = $itemController->findSelectedExtensionIds($username);
+
+        $selectedExtensions = array_values(array_filter(
+            $extensions,
+            static fn(array $extension): bool =>
+                in_array((int) $extension['id'], $extensionIds, true)
+        ));
+
+        $choice = $_POST['export_choice'] ?? '';
+
+    }
+
     if ($page === 'add-game' && $action === 'upload_game_image') {
         $previousImage = $_SESSION['pending_game_image'] ?? null;
         $imageController = new ImageController(__DIR__ . '/upload/');
@@ -171,13 +196,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         }
     } elseif ($page === 'select-games' && $action === 'update_selection') {
         $submittedIds = $_POST['game_ids'] ?? [];
-        if (!is_array($submittedIds)) {
+        $submittedExtensionIds = $_POST['extension_ids'] ?? [];
+
+        if (!is_array($submittedIds) || !is_array($submittedExtensionIds)) {
             http_response_code(400);
             exit('Ongeldige spelkeuze.');
         }
 
         try {
-            $itemController->updateSelection($username, $submittedIds);
+            $itemController->updateSelection($username, $submittedIds, $submittedExtensionIds);
             $_SESSION['cabinet_flash'] = 'Selectie bijgewerkt.';
             header('Location: indexFile.php?page=select-games');
             exit;

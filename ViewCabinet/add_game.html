@@ -1,10 +1,33 @@
 <h2>Voeg een nieuw spel toe</h2>
 <!-- Formulier voor spelgegevens en een aparte uploadstap voor de doosfoto -->
 <form id="game-form" action="indexFile.php?page=add-game" method="post" enctype="multipart/form-data" data-image-uploaded="{{image_uploaded}}" novalidate>
+        <label for="item-kind">Type:</label>
+    <select id="item-kind" name="item_kind">
+        <option value="game">Hoofdspel</option>
+        <option value="extension"{{extension_selected}}>Uitbreiding</option>
+    </select>
+    <br>
     <label for="game-title">Spelnaam:</label>
     <input id="game-title" name="title" type="text" maxlength="255" pattern="[A-Za-z0-9 .,;:_?| -]+" value="{{game_title}}" required>
-    <label for="game-type"><br>Speltype:</label>
-    <input id="game-type" name="type" type="text" maxlength="100" pattern="[A-Za-z0-9 .,;:_?| -]+" value="{{game_type}}" required>
+    
+    <!-- Dropdown menus-->
+    <fieldset id="category-fields">
+        <legend>Categorie</legend>
+        <label for="category">Categorie:</label>
+        <select id="category" name="category" required>
+            <option value="">Kies een categorie</option>
+            {{category_options}}
+        </select>
+    </fieldset>
+    <fieldset id="base-game-fields" hidden disabled>
+        <legend>Hoofdspel</legend>
+        <label for="base-game">Hoofdspel:</label>
+        <select id="base-game" name="base_game" required>
+            <option value="">Kies een hoofdspel</option>
+            {{base_game_options}}
+        </select>
+    </fieldset>
+
     <label for="min-players"><br>Minimumaantal spelers:</label>
     <input id="min-players" name="min_players" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="{{min_players}}" required>
     <label for="max-players"><br>Maximumaantal spelers (leeg als onbekend):</label>
@@ -15,6 +38,7 @@
         <span class="NoBoardG">Nee</span>
         <span class="YesBoardG">Ja</span>
     </label>
+
     <fieldset id="board-fields"{{board_disabled}}>
         <legend>Bordspelgegevens</legend>
         <label for="board-width">Bordbreedte in cm:</label>
@@ -22,21 +46,7 @@
         <label for="board-height"><br>Bordhoogte in cm:</label>
         <input id="board-height" name="board_height" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="{{board_height}}" required>
     </fieldset>
-    <label for="has-expansion"><br>Heeft dit spel een uitbreiding:</label>
-    <label class="switch">
-        <input id="has-expansion" name="has_expansion" type="checkbox" value="1"{{expansion_checked}}>
-        <span class="NoExtend">Nee</span>
-        <span class="YesExtend">Ja</span>
-    </label>
-    <fieldset id="expansion-fields"{{expansion_disabled}}>
-        <legend>Uitbreidingsgegevens</legend>
-        <label for="extension-game">Naam van de uitbreiding:</label>
-        <input id="extension-game" name="extension_game" type="text" maxlength="255" pattern="[A-Za-z0-9 .,;:_?| -]+" value="{{extension_game}}" required>
-        <label for="expansion-min-players"><br>Minimumaantal spelers met uitbreiding:</label>
-        <input id="expansion-min-players" name="expansion_min_players" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="{{expansion_min_players}}" required>
-        <label for="expansion-max-players"><br>Maximumaantal spelers met uitbreiding (leeg als onbekend):</label>
-        <input id="expansion-max-players" name="expansion_max_players" type="text" inputmode="numeric" pattern="[1-9][0-9]*" value="{{expansion_max_players}}">
-    </fieldset>
+
     <label for="game-image"><br>Foto van de doos:</label>
     <input type="file" name="file" id="game-image" accept="image/jpeg,image/png,image/gif">
     <p>{{photo_status}}</p>
@@ -92,13 +102,23 @@
     });
     boardToggle.dispatchEvent(new Event('change'));
 
-    const expansionToggle = document.getElementById('has-expansion');
-    expansionToggle.addEventListener('change', function () {
-        const fields = document.getElementById('expansion-fields');
-        fields.hidden = !this.checked;
-        fields.disabled = !this.checked;
+    const itemKind = document.getElementById('item-kind');
+
+    itemKind.addEventListener('change', function () {
+        const isExtension = this.value === 'extension';
+        const categoryFields = document.getElementById('category-fields');
+        const baseGameFields = document.getElementById('base-game-fields');
+
+        categoryFields.hidden = isExtension;
+        categoryFields.disabled = isExtension;
+        baseGameFields.hidden = !isExtension;
+        baseGameFields.disabled = !isExtension;
+
+        document.querySelector('label[for="game-title"]').textContent =
+            isExtension ? 'Naam van de uitbreiding:' : 'Spelnaam:';
     });
-    expansionToggle.dispatchEvent(new Event('change'));
+
+    itemKind.dispatchEvent(new Event('change'));
 
     function validateMaximum(minimum, maximum) {
         maximum.setCustomValidity(
@@ -110,7 +130,6 @@
 
     const playerLimits = [
         ['min-players', 'max-players'],
-        ['expansion-min-players', 'expansion-max-players']
     ].map(([minimumId, maximumId]) => {
         const minimum = document.getElementById(minimumId);
         const maximum = document.getElementById(maximumId);

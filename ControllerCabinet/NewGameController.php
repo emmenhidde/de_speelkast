@@ -10,9 +10,17 @@ class NewGameController
 
     public function addGame(array $input, string $photoPath): int
     {
-        $title = $this->validatedText($input, 'title', 255, 'Spelnaam');
-        $type = $this->validatedText($input, 'type', 100, 'Speltype');
-        [$minimumPlayers, $maximumPlayers] = $this->playerRange(
+        $itemKind = $input['item_kind'] ?? '';
+
+        if (!in_array($itemKind, ['game', 'extension'], true)) {
+            throw new InvalidArgumentException(
+                'Kies Hoofdspel of Uitbreiding.'
+            );
+        }
+
+        $title = $this->validatedText($input, 'title', 255, 'Naam');
+
+        $players = $this->playerRange(
             $input,
             'min_players',
             'max_players',
@@ -21,39 +29,54 @@ class NewGameController
         );
 
         $isBoardGame = $this->isChecked($input, 'is_board_game');
+
         $boardFormat = $isBoardGame
             ? [
                 $this->positiveInteger($input['board_width'] ?? null, 'Bordbreedte'),
-                $this->positiveInteger($input['board_height'] ?? null, 'Bordhoogte'),
+                $this->positiveInteger($input['board_height'] ?? null, 'Bordhoogte')
             ]
             : null;
 
-        $extensionGame = null;
-        $expandPlayers = null;
-        if ($this->isChecked($input, 'has_expansion')) {
-            $extensionGame = $this->validatedText($input, 'extension_game', 255, 'Uitbreidingsnaam');
-            $expandPlayers = $this->playerRange(
-                $input,
-                'expansion_min_players',
-                'expansion_max_players',
-                'Minimumaantal spelers met uitbreiding',
-                'Maximumaantal spelers met uitbreiding'
+        // Beide tabellen bewaren spelers en bordmaten op dezelfde manier.
+        $playersJson = json_encode($players, JSON_THROW_ON_ERROR);
+        $boardJson = $boardFormat === null
+            ? null
+            : json_encode($boardFormat, JSON_THROW_ON_ERROR);
+
+        // Een uitbreiding krijgt een eigen foto en een hoofdspel-ID.
+        if ($itemKind === 'extension') {
+            return $this->itemStorage->addExtension([
+                'base_game' => $this->positiveInteger($input['base_game'] ?? null,'Hoofdspel'),
+                'extension_name' => $title,
+                'extend_photo_path' => $photoPath,
+                'min_max_extend_players' => $playersJson,
+                'extend_is_boardgame' => $isBoardGame ? 1 : 0,
+                'extend_board_size' => $boardJson
+            ]);
+        }
+
+        // Alleen hoofdspellen krijgen een categorie.
+        $category = $input['category'] ?? '';
+
+        if (!in_array($category, [
+            'Kaartspel',
+            'Bordspel',
+            'Dobbelspel',
+            'Rollenspel',
+            'Behendigheidsspel'
+        ], true)) {
+            throw new InvalidArgumentException(
+                'Kies een geldige categorie.'
             );
         }
 
         return $this->itemStorage->add([
-            'type' => $type,
+            'category' => $category,
             'title' => $title,
             'photo_path' => $photoPath,
-            'min_max_players' => json_encode([$minimumPlayers, $maximumPlayers], JSON_THROW_ON_ERROR),
+            'min_max_players' => $playersJson,
             'is_board_game' => $isBoardGame ? 1 : 0,
-            'board_format' => $boardFormat === null
-                ? null
-                : json_encode($boardFormat, JSON_THROW_ON_ERROR),
-            'extension_game' => $extensionGame,
-            'min_max_expand_players' => $expandPlayers === null
-                ? null
-                : json_encode($expandPlayers, JSON_THROW_ON_ERROR),
+            'board_format' => $boardJson
         ]);
     }
 

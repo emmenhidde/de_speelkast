@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/ItemController.php';
+require_once __DIR__ . '/Arr2XMLController.php';
 
 class PageController
 {
@@ -26,6 +27,14 @@ class PageController
     ): void {
         $items = $itemController->findAll();
         $selectedIDs = $itemController->findSelectedGameIds($username);
+        $extensions = $itemController->findAllExtensions();
+        $selectedExtensionIDs = $itemController->findSelectedExtensionIds($username);
+
+        $selectedExtensions = array_values(array_filter(
+            $extensions,
+            static fn(array $extension): bool =>
+                in_array((int) $extension['id'], $selectedExtensionIDs, true)
+        ));
 
         $selectedItems = array_values(array_filter(
             $items,
@@ -40,72 +49,84 @@ class PageController
             'add-game' => 'add_game.html',
         };
 
+        // Spelcategrien
+        $categories = [
+            'Kaartspel',
+            'Bordspel',
+            'Dobbelspel',
+            'Rollenspel',
+            'Behendigheidsspel'
+        ];
         // Vult de markeringen van de gekozen subpagina.
         $values = match ($page) {
             'select-games' => [
                 '{{message}}' => $this->escape($message),
-                '{{items}}' => $itemController->renderItems(
+                '{{items}}' => $itemController->renderGroupedItems(
                     $items,
-                    $selectedIDs
+                    $extensions,
+                    $selectedIDs,
+                    $selectedExtensionIDs
                 ),
             ],
 
             'my-selection' => [
-                '{{items}}' => $itemController->renderItems(
-                    $selectedItems,
-                    $selectedIDs,
-                    false
+                '{{items}}' => $itemController->renderGroupedItems(
+                $itemController->findAll(),
+                $itemController->findAllExtensions(),
+                $selectedIDs,
+                $selectedExtensionIDs,
+                false
                 ),
+
+                '{{selected_titles}}' => (new Arr2XMLController())
+                    ->renderSelectedTitles(array_merge($selectedItems, $selectedExtensions)),
             ],
 
             'add-game' => [
                 '{{game_form_message}}' => $this->escape($message),
-
                 '{{game_title}}' => $this->escapeFormValue('title'),
-                '{{game_type}}' => $this->escapeFormValue('type'),
                 '{{min_players}}' => $this->escapeFormValue('min_players'),
                 '{{max_players}}' => $this->escapeFormValue('max_players'),
                 '{{board_width}}' => $this->escapeFormValue('board_width'),
                 '{{board_height}}' => $this->escapeFormValue('board_height'),
-                '{{extension_game}}' => $this->escapeFormValue('extension_game'),
 
-                '{{expansion_min_players}}' =>
-                    $this->escapeFormValue('expansion_min_players'),
+                // Herstelt de gekozen soort na upload of een invoerfout.
+                '{{extension_selected}}' =>
+                    ($_POST['item_kind'] ?? '') === 'extension'
+                        ? ' selected'
+                        : '',
 
-                '{{expansion_max_players}}' =>
-                    $this->escapeFormValue('expansion_max_players'),
+                // Bouwt de dropdowns voor categorie en hoofdspel.
+                '{{category_options}}' => $this->renderOptions(
+                    array_combine($categories, $categories),
+                    'category'
+                ),
 
-                // Herstelt de schakelaars na een formulierfout
+                '{{base_game_options}}' => $this->renderOptions(
+                    array_column($items, 'title', 'id'),
+                    'base_game'
+                ),
+
+                // Behoudt de bestaande bordspelschakelaar.
                 '{{board_checked}}' =>
                     ($_POST['is_board_game'] ?? '') === '1'
                         ? ' checked'
                         : '',
 
-                '{{expansion_checked}}' =>
-                    ($_POST['has_expansion'] ?? '') === '1'
-                        ? ' checked'
-                        : '',
-
-                // Verbergt en blokkeert velden die niet van toepassing zijn
                 '{{board_disabled}}' =>
                     ($_POST['is_board_game'] ?? '') === '1'
                         ? ''
                         : ' hidden disabled',
 
-                '{{expansion_disabled}}' =>
-                    ($_POST['has_expansion'] ?? '') === '1'
-                        ? ''
-                        : ' hidden disabled',
-
-                // Geeft de uploadstatus door aan de view
+                // Beide typen gebruiken dezelfde bestaande foto-upload.
                 '{{image_uploaded}}' =>
                     isset($_SESSION['pending_game_image']) ? '1' : '0',
 
                 '{{photo_status}}' =>
                     isset($_SESSION['pending_game_image'])
                         ? 'Doosfoto geüpload.'
-                        : 'Nog geen doosfoto geüpload.',
-            ],
+                        : 'Nog geen doosfoto geüpload.'
+            ]
         };
 
         // Plaatst de gevulde subpagina in de gedeelde kastlayout
@@ -142,6 +163,25 @@ class PageController
         }
 
         return strtr($template, $values);
+    }
+
+    // Maakt dropdownopties en selecteert de eerder gekozen waarde
+    private function renderOptions(array $options, string $key): string
+    {
+        $html = '';
+        $chosen = $_POST[$key] ?? '';
+
+        foreach ($options as $value => $label) {
+            $selected = $chosen === (string) $value ? ' selected' : '';
+
+            $html .= '<option value="'
+                . $this->escape((string) $value)
+                . '"' . $selected . '>'
+                . $this->escape((string) $label)
+                . '</option>';
+        }
+
+        return $html;
     }
 
     // Zet een eerder ingevulde formulierwaarde veilig terug in de HTML
