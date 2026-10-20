@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../ModelCabinet/ItemStorage.php';
+require_once __DIR__ . '/../ModelCabinet/BoardGame.php';
 
 class NewGameController
 {
@@ -8,14 +9,16 @@ class NewGameController
     {
     }
 
-    public function addGame(array $input, string $photoPath): int
+    public function addGame(array $input, string $photoPath, string $owner): int
     {
+        if (trim($owner) === '') {
+            throw new InvalidArgumentException('Log opnieuw in om een spel toe te voegen.');
+        }
+
         $itemKind = $input['item_kind'] ?? '';
 
         if (!in_array($itemKind, ['game', 'extension'], true)) {
-            throw new InvalidArgumentException(
-                'Kies Hoofdspel of Uitbreiding.'
-            );
+            throw new InvalidArgumentException('Kies Hoofdspel of Uitbreiding.');
         }
 
         $title = $this->validatedText($input, 'title', 255, 'Naam');
@@ -51,23 +54,15 @@ class NewGameController
                 'extend_photo_path' => $photoPath,
                 'min_max_extend_players' => $playersJson,
                 'extend_is_boardgame' => $isBoardGame ? 1 : 0,
-                'extend_board_size' => $boardJson
+                'extend_board_size' => $boardJson,
+                'owner_extension' => $owner
             ]);
         }
 
         // Alleen hoofdspellen krijgen een categorie.
         $category = $input['category'] ?? '';
-
-        if (!in_array($category, [
-            'Kaartspel',
-            'Bordspel',
-            'Dobbelspel',
-            'Rollenspel',
-            'Behendigheidsspel'
-        ], true)) {
-            throw new InvalidArgumentException(
-                'Kies een geldige categorie.'
-            );
+        if (!in_array($category, BoardGame::CATEGORIES, true)) {
+            throw new InvalidArgumentException('Kies een geldige categorie.');
         }
 
         return $this->itemStorage->add([
@@ -76,7 +71,8 @@ class NewGameController
             'photo_path' => $photoPath,
             'min_max_players' => $playersJson,
             'is_board_game' => $isBoardGame ? 1 : 0,
-            'board_format' => $boardJson
+            'board_format' => $boardJson,
+            'owner_main' => $owner
         ]);
     }
 
@@ -115,7 +111,7 @@ class NewGameController
 
     private function optionalPositiveInteger(mixed $value, string $label): ?int
     {
-        return $value === '' ? null : $this->positiveInteger($value, $label);
+        return ($value === '' || $value === null) ? null : $this->positiveInteger($value, $label);
     }
 
     private function playerRange(
@@ -145,3 +141,5 @@ class NewGameController
         return $value === '1';
     }
 }
+
+?>

@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/SessionKeeper.php';
+require_once __DIR__ . '/../ModelCabinet/FileStorage.php';
 
 class LogoutController
 {
@@ -29,25 +30,7 @@ class LogoutController
 
     private function removePendingGameImage(): void
     {
-        $fileName = $_SESSION['pending_game_image'] ?? null;
-
-        // Controleert dat de bestandsnaam veilig naar de uploadmap verwijst
-        if (
-            is_string($fileName)
-            && basename($fileName) === $fileName
-            && preg_match(
-                '/\A[a-f0-9.]+\.(jpg|jpeg|png|gif)\z/i',
-                $fileName
-            ) === 1
-        ) {
-            $path = __DIR__ . '/../upload/' . $fileName;
-
-            // Verwijdert de tijdelijke foto als deze bestaat
-            if (is_file($path)) {
-                unlink($path);
-            }
-        }
-
+        (new FileStorage())->removeImage($_SESSION['pending_game_image'] ?? null);
         unset($_SESSION['pending_game_image']);
     }
 }

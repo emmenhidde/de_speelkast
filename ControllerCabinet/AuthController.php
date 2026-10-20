@@ -54,3 +54,5 @@ class AuthController
         return $this->userStorage->createUser($username, $passwordHash);
     }
 }
+
+?>

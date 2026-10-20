@@ -22,41 +22,57 @@ class PageController
     public function showCabinet(
         string $page,
         string $username,
-        ItemController $itemController,
-        string $message
+        ?ItemController $itemController,
+        string $message,
+        string $eveningList = ''
     ): void {
-        $items = $itemController->findAll();
-        $selectedIDs = $itemController->findSelectedGameIds($username);
-        $extensions = $itemController->findAllExtensions();
-        $selectedExtensionIDs = $itemController->findSelectedExtensionIds($username);
 
-        $selectedExtensions = array_values(array_filter(
-            $extensions,
-            static fn(array $extension): bool =>
-                in_array((int) $extension['id'], $selectedExtensionIDs, true)
-        ));
+        if ($page !== 'avondlijst') {
+            if ($itemController === null) {
+                throw new LogicException('Een itemcontroller is nodig voor deze pagina.');
+            }
+            $items = $itemController->findAll();
+        }
 
-        $selectedItems = array_values(array_filter(
-            $items,
-            static fn(array $item): bool =>
-                in_array((int) $item['id'], $selectedIDs, true)
-        ));
+        if (in_array($page, ['select-games', 'my-selection'], true)) {
+            $selectedIDs = $itemController->findSelectedGameIds($username);
+            $extensions = $itemController->findAllExtensions();
+            $selectedExtensionIDs = $itemController->findSelectedExtensionIds($username);
+        }
+
+        if ($page === 'my-selection') {
+            $selectedExtensions = array_filter(
+                $extensions,
+                static fn(array $extension): bool =>
+                    in_array((int) $extension['id'], $selectedExtensionIDs, true)
+            );
+
+            $selectedItems = array_filter(
+                $items,
+                static fn(array $item): bool =>
+                    in_array((int) $item['id'], $selectedIDs, true)
+            );
+        } 
 
         // Koppelt iedere toegestane kastpagina aan een HTML-bestand.
         $viewName = match ($page) {
             'select-games' => 'select_games.html',
             'my-selection' => 'my_selection.html',
             'add-game' => 'add_game.html',
+            'avondlijst' => 'evening_list.html',
         };
 
-        // Spelcategrien
-        $categories = [
-            'Kaartspel',
-            'Bordspel',
-            'Dobbelspel',
-            'Rollenspel',
-            'Behendigheidsspel'
-        ];
+        if ($page === 'add-game') 
+            {$baseGameOptions = [];
+
+            foreach ($items as $item) {
+                $baseGameOptions[$item['id']] = $item['title']
+                    . ' (eigenaar: '
+                    . ($item['owner_main'] ?? 'Onbekend')
+                    . ')';
+            }
+        }
+
         // Vult de markeringen van de gekozen subpagina.
         $values = match ($page) {
             'select-games' => [
@@ -67,12 +83,12 @@ class PageController
                     $selectedIDs,
                     $selectedExtensionIDs
                 ),
-            ],
+            ],          
 
             'my-selection' => [
                 '{{items}}' => $itemController->renderGroupedItems(
-                $itemController->findAll(),
-                $itemController->findAllExtensions(),
+                $items,
+                $extensions,
                 $selectedIDs,
                 $selectedExtensionIDs,
                 false
@@ -80,6 +96,11 @@ class PageController
 
                 '{{selected_titles}}' => (new Arr2XMLController())
                     ->renderSelectedTitles(array_merge($selectedItems, $selectedExtensions)),
+            ],
+
+            'avondlijst' => [
+                '{{evening_message}}' => $this->escape($message),
+                '{{Evening_list}}' => $eveningList,
             ],
 
             'add-game' => [
@@ -98,12 +119,12 @@ class PageController
 
                 // Bouwt de dropdowns voor categorie en hoofdspel.
                 '{{category_options}}' => $this->renderOptions(
-                    array_combine($categories, $categories),
+                    array_combine(BoardGame::CATEGORIES, BoardGame::CATEGORIES),
                     'category'
                 ),
 
                 '{{base_game_options}}' => $this->renderOptions(
-                    array_column($items, 'title', 'id'),
+                    $baseGameOptions,
                     'base_game'
                 ),
 
@@ -144,6 +165,9 @@ class PageController
 
             '{{add_game_current}}' =>
                 $page === 'add-game' ? 'page' : 'false',
+
+            '{{evening_list_current}}' =>
+            $page === 'avondlijst' ? 'page' : 'false',
         ]);
     }
 
@@ -157,9 +181,7 @@ class PageController
         );
 
         if ($template === false) {
-            throw new RuntimeException(
-                'De pagina kon niet worden geladen.'
-            );
+            throw new RuntimeException('De pagina kon niet worden geladen.');
         }
 
         return strtr($template, $values);
@@ -202,3 +224,5 @@ class PageController
         );
     }
 }
+
+?>

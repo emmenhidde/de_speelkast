@@ -9,7 +9,6 @@
     <br>
     <label for="game-title">Spelnaam:</label>
     <input id="game-title" name="title" type="text" maxlength="255" pattern="[A-Za-z0-9 .,;:_?| -]+" value="{{game_title}}" required>
-    
     <!-- Dropdown menus-->
     <fieldset id="category-fields">
         <legend>Categorie</legend>
@@ -35,8 +34,8 @@
     <label for="is-board-game"><br>Is dit een bordspel:</label>
     <label class="switch">
         <input id="is-board-game" name="is_board_game" type="checkbox" value="1"{{board_checked}}>
-        <span class="NoBoardG">Nee</span>
-        <span class="YesBoardG">Ja</span>
+        <span>Nee</span>
+        <span>Ja</span>
     </label>
 
     <fieldset id="board-fields"{{board_disabled}}>
@@ -51,7 +50,7 @@
     <input type="file" name="file" id="game-image" accept="image/jpeg,image/png,image/gif">
     <p>{{photo_status}}</p>
     <p id="game-form-message" role="status">{{game_form_message}}</p>
-    <button type="submit" name="action" value="upload_game_image" formnovalidate>Uploaden</button>
+    <button type="submit" name="action" value="upload_game_image">Uploaden</button>
     <button type="submit" name="action" value="add_game">Voeg het spel toe aan de speelkast</button>
 </form>
 <!-- Opmaak voor de bestaande Ja/Nee-schakelaars -->
@@ -62,6 +61,7 @@
         background: #ddd;
         border-radius: 20px;
         cursor: pointer;
+        transform: scale(0.85);
     }
 
     .switch input {
@@ -75,9 +75,7 @@
         text-align: center;
         z-index: 1;
     }
-    .switch {
-        transform: scale(0.85);
-    }
+
     .switch::before {
         content: "";
         position: absolute;
@@ -120,7 +118,11 @@
 
     itemKind.dispatchEvent(new Event('change'));
 
-    function validateMaximum(minimum, maximum) {
+    // Beide itemsoorten gebruiken hetzelfde minimum/maximum-paar.
+    const minimum = document.getElementById('min-players');
+    const maximum = document.getElementById('max-players');
+
+    function validatePlayers() {
         maximum.setCustomValidity(
             maximum.value !== '' && Number(maximum.value) < Number(minimum.value)
                 ? 'Maximum moet minstens het minimum zijn.'
@@ -128,34 +130,39 @@
         );
     }
 
-    const playerLimits = [
-        ['min-players', 'max-players'],
-    ].map(([minimumId, maximumId]) => {
-        const minimum = document.getElementById(minimumId);
-        const maximum = document.getElementById(maximumId);
-        [minimum, maximum].forEach(input => {
-            input.addEventListener('input', () => validateMaximum(minimum, maximum));
-        });
-        return [minimum, maximum];
-    });
+    minimum.addEventListener('input', validatePlayers);
+    maximum.addEventListener('input', validatePlayers);
 
     document.getElementById('game-form').addEventListener('submit', function (event) {
+        // Geeft ook een submit zonder knop een geldige toevoegactie mee.
+        if (!event.submitter) {
+            event.preventDefault();
+            this.requestSubmit(this.querySelector('button[value="add_game"]'));
+            return;
+        }
+
         const action = event.submitter.value;
         const image = document.getElementById('game-image');
         const message = document.getElementById('game-form-message');
+
+        // Wist een foutmelding van een eerdere uploadpoging.
+        image.setCustomValidity('');
 
         if (action === 'upload_game_image') {
             if (image.files.length === 0) {
                 event.preventDefault();
                 image.setCustomValidity('Selecteer eerst een doosfoto.');
                 image.reportValidity();
-            } else {
-                image.setCustomValidity('');
             }
             return;
         }
 
-        playerLimits.forEach(([minimum, maximum]) => validateMaximum(minimum, maximum));
+        // Wijst een titel met uitsluitend spaties ook aan de clientkant af.
+        const title = document.getElementById('game-title');
+        title.value = title.value.trim();
+
+        validatePlayers();
+
         if (this.dataset.imageUploaded !== '1') {
             event.preventDefault();
             message.textContent = 'Upload eerst een doosfoto.';

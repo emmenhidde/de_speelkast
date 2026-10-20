@@ -12,17 +12,11 @@ require_once __DIR__ . '/ControllerCabinet/NewGameController.php';
 require_once __DIR__ . '/ControllerCabinet/ImageController.php';
 require_once __DIR__ . '/ControllerCabinet/PageController.php';
 require_once __DIR__ . '/ControllerCabinet/Arr2XMLController.php';
+require_once __DIR__ . '/ControllerCabinet/EveningListController.php';
 
 // Maakt de controller die de HTML-pagina's gaat opbouwen
+try {
 $pageController = new PageController();
-
-// Controleert dat een sessiebestandsnaam veilig naar de uploadmap verwijst
-function isPendingGameImageName(mixed $fileName): bool
-{
-    return is_string($fileName)
-        && basename($fileName) === $fileName
-        && preg_match('/\A[a-f0-9.]+\.(jpg|jpeg|png|gif)\z/i', $fileName) === 1;
-}
 
 // Start de sessie voordat de router gebruikersstatus controleert
 SessionKeeper::startSession();
@@ -103,7 +97,7 @@ if ($page === 'cabinet') {
     exit;
 }
 
-$cabinetPages = ['select-games', 'my-selection', 'add-game'];
+$cabinetPages = ['select-games', 'my-selection', 'add-game', 'avondlijst'];
 if (!in_array($page, $cabinetPages, true)) {
     http_response_code(404);
     exit('Pagina niet gevonden.');
@@ -116,9 +110,6 @@ if (!$loggedIn) {
 }
 
 $username = $_SESSION['username'];
-$itemStorage = new ItemStorage((new DBConnect())->getConnection());
-$itemController = new ItemController($itemStorage);
-$newGameController = new NewGameController($itemStorage);
 
 // Leest een melding die na een redirect moet worden getoond
 $message = $_SESSION['cabinet_flash'] ?? '';
@@ -126,6 +117,50 @@ unset($_SESSION['cabinet_flash']);
 
 // Bereidt de melding voor het formulier voor speltoevoeging voor
 $gameFormMessage = $page === 'add-game' ? $message : '';
+
+// Bouwt de avondlijst
+if ($page === 'avondlijst') {
+    header('Cache-Control: no-store');
+
+    // Iedere nieuwe opening begint zonder ingeladen lijst.
+    $eveningList = '';
+    $message = '';
+
+    if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+        try {
+            if (($_POST['action'] ?? '') !== 'load_evening_xml') {
+                throw new InvalidArgumentException('Ongeldige actie.');
+            }
+
+            $eveningController = new EveningListController();
+
+            $eveningList = $eveningController->renderUpload(
+                $_FILES['evening_xml'] ?? []
+            );
+            $message = 'De XML is geldig volgens gamesFormatting.xsd.';
+        } catch (InvalidArgumentException $exception) {
+            http_response_code(400);
+            $message = $exception->getMessage();
+        } catch (RuntimeException $exception) {
+            http_response_code(500);
+            $message = $exception->getMessage();
+        }
+    }
+
+    // Toont het formulier
+    $pageController->showCabinet(
+        $page,
+        $username,
+        null,
+        $message,
+        $eveningList
+    );
+
+    exit;
+}
+
+$itemStorage = new ItemStorage((new DBConnect())->getConnection());
+$itemController = new ItemController($itemStorage);
 
 // Verwerkt upload, speltoevoeging en selectie-updates voor de actieve subpagina
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
@@ -152,31 +187,48 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 in_array((int) $extension['id'], $extensionIds, true)
         ));
 
+        // Leest welke gegevens en welk bestandsformaat worden geëxporteerd
         $choice = $_POST['export_choice'] ?? '';
 
+        try {
+            if (!is_string($choice)) {
+                throw new InvalidArgumentException('Ongeldige exportkeuze.');
+            }
+
+            $xmlController = new Arr2XMLController();
+
+            // Verzameld hoofdspellen en uitbreidingen in de XML-export
+            $xmlController->exportXML(
+                array_merge($selectedItems, $selectedExtensions),
+                array_merge($items, $extensions),
+                $choice
+            );
+        } catch (InvalidArgumentException $exception) {
+            http_response_code(400);
+            exit($exception->getMessage());
+        } catch (RuntimeException $exception) {
+            http_response_code(500);
+            exit($exception->getMessage());
+        }
     }
 
     if ($page === 'add-game' && $action === 'upload_game_image') {
         $previousImage = $_SESSION['pending_game_image'] ?? null;
-        $imageController = new ImageController(__DIR__ . '/upload/');
+        $fileStorage = new FileStorage(__DIR__ . '/upload/');
+        $imageController = new ImageController($fileStorage);
 
         try {
             $fileName = $imageController->uploadImage($_FILES['file'] ?? []);
-            if (isPendingGameImageName($previousImage)) {
-                $previousPath = __DIR__ . '/upload/' . $previousImage;
-                if (is_file($previousPath)) {
-                    unlink($previousPath);
-                }
-            }
+            $fileStorage->removeImage($previousImage);
             $_SESSION['pending_game_image'] = $fileName;
-            $gameFormMessage = 'De doosfoto is geüpload.';
+            $gameFormMessage = 'Klik nu op "Voeg het spel toe aan de speelkast".';
         } catch (RuntimeException $exception) {
             http_response_code(400);
             $gameFormMessage = $exception->getMessage();
         }
     } elseif ($page === 'add-game' && $action === 'add_game') {
         $fileName = $_SESSION['pending_game_image'] ?? null;
-        if (!isPendingGameImageName($fileName) || !is_file(__DIR__ . '/upload/' . $fileName)) {
+        if (!FileStorage::isPendingGameImageName($fileName) || !is_file(__DIR__ . '/upload/' . $fileName)) {
             http_response_code(400);
             $gameFormMessage = 'Upload eerst een geldige doosfoto.';
         } else {
@@ -184,7 +236,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $photoPath = $applicationPath . '/upload/' . $fileName;
 
             try {
-                $newGameController->addGame($_POST, $photoPath);
+                $newGameController = new NewGameController($itemStorage);
+                $newGameController->addGame($_POST, $photoPath, $username);
                 unset($_SESSION['pending_game_image']);
                 $_SESSION['cabinet_flash'] = 'Het spel is toegevoegd aan de speelkast.';
                 header('Location: indexFile.php?page=add-game');
@@ -225,5 +278,16 @@ $pageController->showCabinet(
     $itemController,
     $page === 'add-game' ? $gameFormMessage : $message
 );
+
+} catch (RuntimeException | JsonException $exception) {
+    // Technische details gaan naar de serverlog
+    error_log($exception->getMessage());
+
+    http_response_code(500);
+    exit(
+        'De speelkast kon niet worden geladen. '
+        . 'Controleer de database en serverlog.'
+    );
+}
 
 ?>

@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../ModelCabinet/FileStorage.php';
+
 final class SessionKeeper
 {
     private const sessionDuration = 2 * 24 * 60 * 60; // days * hours * minutes * seconds
@@ -33,6 +35,7 @@ final class SessionKeeper
             !is_int($lastActivity) ||
             time() - $lastActivity > self::sessionDuration
         )) {
+            (new FileStorage())->removeImage($_SESSION['pending_game_image'] ?? null);
             session_regenerate_id(true);
             $_SESSION = [];
         }

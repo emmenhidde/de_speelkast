@@ -40,8 +40,9 @@ public function addExtension(array $item): int
     $statement = $this->pdo->prepare(
         'INSERT INTO gamesextensions
          (base_game, extension_name, extend_photo_path,
-          min_max_extend_players, extend_is_boardgame, extend_board_size)
-         VALUES (?, ?, ?, ?, ?, ?)'
+          min_max_extend_players, extend_is_boardgame, 
+          extend_board_size, owner_extension)
+         VALUES (?, ?, ?, ?, ?, ?, ?)'
     );
     $statement->execute([
         $item['base_game'],
@@ -49,7 +50,8 @@ public function addExtension(array $item): int
         $item['extend_photo_path'],
         $item['min_max_extend_players'],
         $item['extend_is_boardgame'],
-        $item['extend_board_size']
+        $item['extend_board_size'],
+        $item['owner_extension']
     ]);
 
     return (int) $this->pdo->lastInsertId();
@@ -65,28 +67,24 @@ public function addExtension(array $item): int
         $column = $extensions ? 'claimed_extensions' : 'claimed_games';
 
         $statement = $this->pdo->prepare(
-            "SELECT $column FROM gamesClaimed WHERE account_username = :username"
+            "SELECT $column FROM gamesclaimed WHERE account_username = :username"
         );
         $statement->execute(['username' => $username]);
         $selectedGames = $statement->fetchColumn();
 
-        if ($selectedGames === false) {
+        if ($selectedGames === false || $selectedGames === null) {
             return [];
         }
 
         $gameIds = json_decode($selectedGames, true, 512, JSON_THROW_ON_ERROR);
 
         if (!is_array($gameIds)) {
-            throw new UnexpectedValueException(
-                'De opgeslagen spelkeuze is ongeldig.'
-            );
+            throw new UnexpectedValueException('De opgeslagen spelkeuze is ongeldig.');
         }
 
         foreach ($gameIds as $gameId) {
             if (!is_int($gameId) || $gameId < 1) {
-                throw new UnexpectedValueException(
-                    'De opgeslagen spelkeuze bevat een ongeldig ID.'
-                );
+                throw new UnexpectedValueException('De opgeslagen spelkeuze bevat een ongeldig ID.');
             }
         }
 
@@ -108,9 +106,7 @@ public function addExtension(array $item): int
         ] as $table => $ids) {
             foreach ($ids as $id) {
                 if (!is_int($id) || $id < 1) {
-                    throw new InvalidArgumentException(
-                        'De selectie bevat een ongeldig ID.'
-                    );
+                    throw new InvalidArgumentException('De selectie bevat een ongeldig ID.');
                 }
             }
 
@@ -126,15 +122,13 @@ public function addExtension(array $item): int
             $statement->execute($ids);
 
             if ((int) $statement->fetchColumn() !== count($ids)) {
-                throw new InvalidArgumentException(
-                    'De selectie bevat een onbekend spel of uitbreiding.'
-                );
+                throw new InvalidArgumentException('De selectie bevat een onbekend spel of uitbreiding.');
             }
         }
 
         // Beide lijsten worden pas opgeslagen nadat alle controles zijn geslaagd.
         $statement = $this->pdo->prepare(
-            'INSERT INTO gamesClaimed
+            'INSERT INTO gamesclaimed
                 (account_username, claimed_games, claimed_extensions)
             VALUES (:username, :game_ids, :extension_ids)
             ON DUPLICATE KEY UPDATE
@@ -154,8 +148,8 @@ public function addExtension(array $item): int
         $statement = $this->pdo->prepare(
             'INSERT INTO gamesitems
             (category, title, photo_path, min_max_players,
-            is_board_game, board_format)
-            VALUES (?, ?, ?, ?, ?, ?)'
+            is_board_game, board_format, owner_main)
+            VALUES (?, ?, ?, ?, ?, ?, ?)'
         );
         $statement->execute([
             $item['category'],
@@ -163,9 +157,12 @@ public function addExtension(array $item): int
             $item['photo_path'],
             $item['min_max_players'],
             $item['is_board_game'],
-            $item['board_format']
+            $item['board_format'],
+             $item['owner_main']
         ]);
 
         return (int) $this->pdo->lastInsertId();
     }
 }
+
+?>

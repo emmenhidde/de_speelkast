@@ -1,6 +1,8 @@
 <?php
 
 require_once __DIR__ . '/../ModelCabinet/ItemStorage.php';
+require_once __DIR__ . '/../ModelCabinet/BoardGame.php';
+require_once __DIR__ . '/../ModelCabinet/ExpansionSet.php';
 
 class ItemController
 {
@@ -40,17 +42,13 @@ class ItemController
                     !is_string($id) ||
                     preg_match('/\A[1-9][0-9]*\z/', $id) !== 1
                 ) {
-                    throw new InvalidArgumentException(
-                        'De selectie bevat een ongeldig ID.'
-                    );
+                    throw new InvalidArgumentException('De selectie bevat een ongeldig ID.');
                 }
 
                 $id = filter_var($id, FILTER_VALIDATE_INT);
 
                 if ($id === false || $id < 1) {
-                    throw new InvalidArgumentException(
-                        'De selectie bevat een ongeldig ID.'
-                    );
+                    throw new InvalidArgumentException('De selectie bevat een ongeldig ID.');
                 }
 
                 $gameIds[] = $id;
@@ -75,42 +73,37 @@ class ItemController
         $selectedIDs = array_fill_keys($selectedIDs, true);
         $rows = [];
         foreach ($items as $item) {
-            if ($isExtension) {
-                $item = [
-                    'id' => $item['id'],
-                    'title' => $item['extension_name'],
-                    'photo_path' => $item['extend_photo_path'],
-                    'min_max_players' => $item['min_max_extend_players'],
-                    'is_board_game' => $item['extend_is_boardgame'],
-                    'board_format' => $item['extend_board_size']
-                ];
-            }
-            $id = (int) $item['id'];
-            $title = $this->escape((string) $item['title']);
+            $cabinetItem = $isExtension
+                ? new ExpansionSet($item)
+                : new BoardGame($item);
+
+            $id = $cabinetItem->id;
+            $title = $this->escape($cabinetItem->title);
+
             $details = [
-                $isExtension
-                    ? 'Type: Uitbreiding'
-                    : 'Categorie: ' . $this->escape((string) $item['category'])
+                $this->escape($cabinetItem->description()),
+                'Eigenaar: ' . $this->escape($cabinetItem->owner ?? 'Onbekend'),
+                'Spelers: ' . $this->formatPlayers($cabinetItem->minMaxPlayers)
             ];
 
-            $players = $this->decodeSelectionList($item['min_max_players']);
-            if ($players !== null) {
-                $details[] = 'Spelers: ' . $this->formatPlayers($players);
-            }
-
-            // Toont het bordformaat.
-            if ((int) $item['is_board_game'] === 1) {
+            if ($cabinetItem->isBoardGame) {
                 $details[] = 'Bordformaat: ' . (
-                    $item['board_format'] === null
+                    $cabinetItem->boardFormat === null
                         ? 'Onbekend of variabel'
-                        : $this->formatPair(
-                            $this->decodeSelectionList($item['board_format'])
-                        ) . ' cm'
-                );
+                        : $this->formatPair($cabinetItem->boardFormat) . ' cm');
             }
 
-            // Twee parallele lijsten
-            $selectionName = $isExtension ? 'extension_ids[]' : 'game_ids[]';
+            $photoPath = $cabinetItem->showImage();
+
+            $image = $cabinetItem->checkFileName($photoPath)
+                ? '<img src="' . $this->escape($photoPath)
+                    . '" alt="Doos: ' . $title . '" width="100">'
+                : 'Geen geldige doosfoto beschikbaar.';
+
+            // Beide soorten behouden hun eigen selectielijst
+            $selectionName = $isExtension
+                ? 'extension_ids[]'
+                : 'game_ids[]';
 
             $selectionCell = $showCheckboxes
                 ? '<td style="width: 40px;">'
@@ -125,12 +118,8 @@ class ItemController
 
             $rows[] = '<tr>'
                 . $selectionCell
-                . '<td style="width: 120px;">'
-                . '<img src="' . $this->escape((string) $item['photo_path'])
-                . '" alt="Doos: ' . $title . '" width="100">'
-                . '</td>'
-                . '<td>'
-                . '<h3>' . $title . '</h3>'
+                . '<td style="width: 120px;">' . $image . '</td>'
+                . '<td><h3>' . $title . '</h3>'
                 . '<ul><li>' . implode('</li><li>', $details) . '</li></ul>'
                 . '</td></tr>';
         }
@@ -236,16 +225,6 @@ class ItemController
             ?: '<tr><td colspan="2">Er zijn geen spellen geselecteerd.</td></tr>';
     }
 
-    private function decodeSelectionList(string $json): ?array
-    {
-        $values = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-        if (!is_array($values)) {
-            throw new UnexpectedValueException('Een opgeslagen spelveld is ongeldig.');
-        }
-
-        return $values;
-    }
-
     private function formatPlayers(array $players): string
     {
         return $this->formatLimit($players[0] ?? null) . ' tot ' . $this->formatLimit($players[1] ?? null);
@@ -268,3 +247,5 @@ class ItemController
         return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 }
+
+?>

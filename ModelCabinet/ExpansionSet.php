@@ -1,41 +1,33 @@
 <?php
 
+require_once __DIR__ . '/CabinetItem.php';
+
 class ExpansionSet extends CabinetItem
 {
-    public function __construct(
-        public int $id,
-        public string $type,
-        public string $title,
-        public string $photoPath,
-        public array $minMaxPlayers,
-        public bool $isBoardGame,
-        public ?string $extensionGame,
-        public array $minMaxExpandPlayers,
-    ) {
+    public int $baseGame;
+
+    public function __construct(array $item)
+    {
+        $this->baseGame = (int) $item['base_game'];
+
         parent::__construct(
-            $id,
-            $type,
-            $title,
-            $photoPath,
-            $minMaxPlayers,
-            $isBoardGame,
-            $extensionGame
+            (int) $item['id'],
+            (string) $item['extension_name'],
+            (string) $item['extend_photo_path'],
+            $this->decodeSelectionList($item['min_max_extend_players']),
+            (int) $item['extend_is_boardgame'] === 1,
+            $item['extend_board_size'] === null
+                ? null
+                : $this->decodeSelectionList($item['extend_board_size']),
+            $item['owner_extension'] ?? null
         );
     }
 
     public function description(): string
     {
-        return sprintf(
-            '%s (uitbreiding op %s, %d-%d spelers)',
-            $this->title,
-            $this->extensionGame ?? null,
-            $this->minMaxExpandPlayers[0],
-            $this->minMaxExpandPlayers[1]
-        );
+        return 'Dit is een uitbreidingsset (hoofdspel-ID: ' . $this->baseGame . ')';
     }
 
-    public function expansionDescription(): string
-    {
-        return $this->description();
-    }
 }
+
+?>
