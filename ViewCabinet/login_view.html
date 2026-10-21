@@ -4,10 +4,156 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Inloggen - De Speelkast</title>
+    <style>
+        /* Plaatst de kastdeur centraal op een rustige achtergrond. */
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            min-height: 100svh;
+            display: grid;
+            place-items: center;
+            padding: 24px 16px;
+            background: radial-gradient(circle at top, #faf7f1, #ded6c9);
+            color: #fff7ec;
+            font: 16px/1.5 Arial, sans-serif;
+        }
+
+        /* De houten deur met een stevig kader. */
+        main {
+            position: relative;
+            width: min(100%, 460px);
+            padding: 40px 48px 32px 32px;
+            border: 12px solid #39291f;
+            border-radius: 6px;
+            background: linear-gradient(
+                90deg, #68442e, #80583c 50%, #68442e
+            );
+            box-shadow:
+                inset 0 0 0 8px #593c2a,
+                0 18px 45px #39291f40;
+        }
+
+        /* Tekent de rand van een verzonken deurpaneel. */
+        main::before {
+            content: "";
+            position: absolute;
+            inset: 12px;
+            border: 1px solid #b08a65;
+            pointer-events: none;
+        }
+
+        /* Tekent een messingkleurig handvat rechts op de deur. */
+        main::after {
+            content: "";
+            position: absolute;
+            right: 14px;
+            top: calc(50% - 42px);
+            width: 9px;
+            height: 84px;
+            border: 1px solid #a77c38;
+            border-radius: 6px;
+            background: linear-gradient(
+                90deg, #b58a46, #f4dba0, #b58a46
+            );
+            box-shadow: 3px 3px 5px #24180e80;
+            pointer-events: none;
+        }
+
+        /* Vormt het naamplaatje boven de paginatitel. */
+        .brand {
+            display: inline-block;
+            margin: 0 0 20px;
+            padding: 6px 10px;
+            border: 1px solid #c6a66d;
+            border-radius: 2px;
+            background: #ead5ae;
+            color: #39291f;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 30px;
+            line-height: 1.2;
+        }
+
+        .intro {
+            margin: 10px 0 24px;
+            color: #f4e4d1;
+        }
+
+        /* Zet de bestaande formuliervelden overzichtelijk onder elkaar. */
+        form { display: grid; gap: 8px; }
+        form br { display: none; }
+        label { font-weight: bold; }
+
+        input {
+            width: 100%;
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid #d2bfa6;
+            border-radius: 4px;
+            background: #fffaf3;
+            color: #30251d;
+            font: inherit;
+        }
+
+        small { color: #ffe0a1; }
+
+        button {
+            margin-top: 12px;
+            padding: 12px;
+            border: 1px solid #e8ca90;
+            border-radius: 4px;
+            background: #e8ca90;
+            color: #30251d;
+            font: inherit;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover { background: #f4dcae; }
+
+        a {
+            color: #fff7ec;
+            text-underline-offset: 3px;
+        }
+
+        main > p:last-child {
+            margin: 22px 0 0;
+            font-size: 14px;
+        }
+
+        /* Maakt zichtbaar welk onderdeel met het toetsenbord is gekozen. */
+        input:focus-visible,
+        button:focus-visible,
+        a:focus-visible {
+            outline: 3px solid #ffe0a1;
+            outline-offset: 3px;
+        }
+
+        /* Geeft bestaande meldingen een eigen vlak. */
+        [role="status"] {
+            padding: 10px 12px;
+            border-left: 3px solid #e8ca90;
+            background: #39291f;
+            overflow-wrap: anywhere;
+        }
+
+        /* Een lege melding neemt geen ruimte in. */
+        [role="status"]:empty { display: none; }
+    </style>
 </head>
 <body>
     <main>
+        <p class="brand">De Speelkast</p>
         <h1>Inloggen</h1>
+        <p class="intro">Open de kast en kies jouw spellen.</p>
         <p role="status">{{message}}</p>
         <form action="indexFile.php?page=login" method="post">
             <label for="username">Gebruikersnaam</label>

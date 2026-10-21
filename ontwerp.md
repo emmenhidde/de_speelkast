@@ -58,3 +58,6 @@ Een succesvolle login opent de kast, logout beëindigt de sessie en keert terug 
 - gamesitems: id, category, title, photo_path, min_max_players, is_board_game, board_format, owner_main
 - gamesextensions: id, base_game, extension_name, extend_photo_path, min_max_extend_players, extend_is_boardgame, extend_board_size, owner_extension
 - gamesclaimed: account_username, claimed_games, claimed_extensions
+
+## mogelijke extras
+- Een optie onderaan de selectiepagina teovoegen om alle dozen te selecteren waarvan het ingelogde account de eigenaar is

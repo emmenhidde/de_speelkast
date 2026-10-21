@@ -1,13 +1,15 @@
 <h2>Mijn selectie</h2>
-<table style="width: 100%; border-spacing: 0 8px; text-align: left;">
-    <colgroup>
-        <col style="width: 50%;">
-        <col style="width: 50%;">
-    </colgroup>
-    <tbody>
-        {{items}}
-    </tbody>
-</table>
+<div class="cabinet-overview">
+    <table class="cabinet-items">
+        <colgroup>
+            <col style="width: 50%;">
+            <col style="width: 50%;">
+        </colgroup>
+        <tbody>
+            {{items}}
+        </tbody>
+    </table>
+</div>
 <hr>
 <h2>Exporteer selectie naar XML</h2>
 <p>Geselecteerde spellen:</p>
@@ -15,13 +17,11 @@
     {{selected_titles}}
 </ul>
 
-<form action="indexFile.php?page=my-selection" method="post">
+<form class="cabinet-actions" action="indexFile.php?page=my-selection" method="post">
     <input type="hidden" name="action" value="export_xml">
-
     <button type="submit" name="export_choice" value="selection">
         Exporteer mijn selectie
     </button>
-
     <button type="submit" name="export_choice" value="all">
         Exporteer volledige kast
     </button>

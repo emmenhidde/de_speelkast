@@ -5,7 +5,7 @@ require_once __DIR__ . '/Arr2XMLController.php';
 
 class PageController
 {
-    // Kiest de login- of registratieview en vult de melding in.
+    // Kiest de login- of registratieview en vult de melding in
     public function showAuthPage(string $page, string $message): void
     {
         $viewName = match ($page) {
@@ -18,7 +18,7 @@ class PageController
         ]);
     }
 
-    // Haalt spelgegevens op en bouwt de gekozen kastpagina op.
+    // Haalt spelgegevens op en bouwt de gekozen kastpagina op
     public function showCabinet(
         string $page,
         string $username,
@@ -54,7 +54,7 @@ class PageController
             );
         } 
 
-        // Koppelt iedere toegestane kastpagina aan een HTML-bestand.
+        // Koppelt iedere toegestane kastpagina aan een HTML-bestand
         $viewName = match ($page) {
             'select-games' => 'select_games.html',
             'my-selection' => 'my_selection.html',
@@ -73,7 +73,7 @@ class PageController
             }
         }
 
-        // Vult de markeringen van de gekozen subpagina.
+        // Vult de markeringen van de gekozen subpagina
         $values = match ($page) {
             'select-games' => [
                 '{{message}}' => $this->escape($message),
@@ -171,7 +171,7 @@ class PageController
         ]);
     }
 
-    // Leest een HTML-view en vervangt bijvoorbeeld {{message}}
+    // Leest een HTML-view en plaatst {{}}
     private function renderView(
         string $viewName,
         array $values = []
@@ -196,10 +196,8 @@ class PageController
         foreach ($options as $value => $label) {
             $selected = $chosen === (string) $value ? ' selected' : '';
 
-            $html .= '<option value="'
-                . $this->escape((string) $value)
-                . '"' . $selected . '>'
-                . $this->escape((string) $label)
+            $html .= '<option value="' . $this->escape((string) $value)
+                . '"' . $selected . '>' . $this->escape((string) $label)
                 . '</option>';
         }
 
@@ -218,10 +216,7 @@ class PageController
     private function escape(string $value): string
     {
         return htmlspecialchars(
-            $value,
-            ENT_QUOTES | ENT_SUBSTITUTE,
-            'UTF-8'
-        );
+            $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 }
 

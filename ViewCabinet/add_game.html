@@ -57,8 +57,10 @@
 <style>
     .switch {
         display: inline-flex;
+        justify-self: start;
         position: relative;
-        background: #ddd;
+        background: #e4d5bd;
+        color: #39291f;
         border-radius: 20px;
         cursor: pointer;
         transform: scale(0.85);
@@ -81,13 +83,18 @@
         position: absolute;
         width: 40px;
         height: 100%;
-        background: #b8ccf5;
+        background: #e8ca90;
         border-radius: 20px;
         transition: transform 0.2s;
     }
 
     .switch:has(input:checked)::before {
         transform: translateX(40px);
+    }
+
+    .switch:focus-within {
+        outline: 3px solid #a77c38;
+        outline-offset: 3px;
     }
 </style>
 <!-- Verweking en JS controle invoer -->

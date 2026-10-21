@@ -137,7 +137,7 @@ if ($page === 'avondlijst') {
             $eveningList = $eveningController->renderUpload(
                 $_FILES['evening_xml'] ?? []
             );
-            $message = 'De XML is geldig volgens gamesFormatting.xsd.';
+            $message = 'De XML is geldig volgens de .XSD controle.';
         } catch (InvalidArgumentException $exception) {
             http_response_code(400);
             $message = $exception->getMessage();

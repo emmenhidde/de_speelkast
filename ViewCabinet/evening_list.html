@@ -19,18 +19,26 @@
 
 <p role="status">{{evening_message}}</p>
 
-{{Evening_list}}
+<div class="evening-result">
+    {{Evening_list}}
+</div>
 
 <style>
+    .evening-result {
+        overflow-x: auto;
+        padding-bottom: 18px;
+    }
+
     .evening-grid,
     .evening-wide {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 8px;
+        gap: 12px;
     }
 
     .evening-grid {
-        margin-top: 8px;
+        min-width: 760px;
+        margin-top: 20px;
     }
 
     .evening-pair {
@@ -44,17 +52,25 @@
 
     .evening-group {
         min-width: 0;
-        border: 1px solid black;
-        background-color: #e6f6fe;
+        border: 1px solid #ceb58e;
+        border-radius: 4px;
+        background: #fffbf3;
+        box-shadow:
+            0 6px 0 #79543b,
+            0 10px 12px #39291f20;
     }
 
-    .evening-cards {
-        display: grid;
+    .evening-group > p {
+        margin: 0;
+        padding: 12px;
+        background: #ead5ae;
     }
+
+    .evening-cards { display: grid; }
 
     .evening-card {
         min-width: 0;
-        padding: 8px;
+        padding: 12px;
         overflow-wrap: anywhere;
     }
 

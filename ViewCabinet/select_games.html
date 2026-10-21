@@ -2,14 +2,16 @@
 <p role="status">{{message}}</p>
 <form action="indexFile.php?page=select-games" method="post">
     <input type="hidden" name="action" value="update_selection">
-    <table style="width: 100%; border-spacing: 0 8px; text-align: left;">
-        <colgroup>
-            <col style="width: 50%;">
-            <col style="width: 50%;">
-        </colgroup>
-        <tbody>
-            {{items}}
-        </tbody>
-    </table>
+    <div class="cabinet-overview">
+        <table class="cabinet-items">
+            <colgroup>
+                <col style="width: 50%;">
+                <col style="width: 50%;">
+            </colgroup>
+            <tbody>
+                {{items}}
+            </tbody>
+        </table>
+    </div>
     <button type="submit">Selectie bijwerken</button>
 </form>
