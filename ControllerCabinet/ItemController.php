@@ -171,6 +171,7 @@ class ItemController
             $extensionBlocks = [];
 
             foreach ($relatedExtensions as $extension) {
+                $extension['base_game_title'] = (string) $item['title'];
                 $extensionBlocks[] =
                     '<table style="width: 100%; text-align: left;">'
                     . $this->renderItems(

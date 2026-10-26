@@ -23,9 +23,12 @@ class AuthController
             return false;
         }
 
-        session_regenerate_id(true);
-        $_SESSION['user_id'] = $user['id'];
+        if (!session_regenerate_id(true)) {
+            throw new RuntimeException('De sessie kon niet worden vernieuwd.');
+        }
+        $_SESSION['user_id'] = (int) $user['id'];
         $_SESSION['username'] = $user['username'];
+        $_SESSION['login_started_at'] = time();
 
         return true;
     }

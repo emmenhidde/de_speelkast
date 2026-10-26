@@ -5,16 +5,24 @@ class EveningListController
     // Leest de tijdelijke upload en geeft de XSLT-weergave terug.
     public function renderUpload(array $file): string
     {
+        $error = $file['error'] ?? UPLOAD_ERR_NO_FILE;
         $temporaryFile = $file['tmp_name'] ?? '';
 
+        if (in_array($error, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
+            throw new InvalidArgumentException('Het XML-bestand mag maximaal 2 MB zijn.');
+        }
+
         if (
-            ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK ||
+            $error !== UPLOAD_ERR_OK ||
             !is_string($temporaryFile) ||
             !is_uploaded_file($temporaryFile)
         ) {
             throw new InvalidArgumentException('Kies eerst een XML-bestand.');
         }
 
+        if (filesize($temporaryFile) === false || filesize($temporaryFile) < 1) {
+            throw new InvalidArgumentException('Kies een niet-leeg XML-bestand.');
+        }    
         if (filesize($temporaryFile) > 2 * 1024 * 1024) {
             throw new InvalidArgumentException('Het XML-bestand mag maximaal 2 MB zijn.');
         }
@@ -156,8 +164,6 @@ class EveningListController
             }
 
             return $html;
-        } catch (JsonException $exception) {
-            throw new InvalidArgumentException('De XML bevat ongeldige spelers- of bordgegevens.');
         } finally {
             libxml_clear_errors();
             libxml_use_internal_errors($previousErrors);

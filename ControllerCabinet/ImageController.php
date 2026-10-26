@@ -11,7 +11,7 @@ class ImageController
         $error = $file['error'] ?? UPLOAD_ERR_NO_FILE;
 
         if (in_array($error, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
-            throw new RuntimeException('Het bestand mag maximaal 2 MB zijn.');
+            throw new InvalidArgumentException('Het bestand mag maximaal 2 MB zijn.');
         }
 
         $temporaryFile = $file['tmp_name'] ?? null;
@@ -23,12 +23,12 @@ class ImageController
             || !is_string($originalName)
             || !is_uploaded_file($temporaryFile)
         ) {
-            throw new RuntimeException('Kies eerst een geldig bestand.');
+            throw new InvalidArgumentException('Kies eerst een geldig bestand.');
         }
 
         $size = filesize($temporaryFile);
         if ($size === false || $size < 1 || $size > 2 * 1024 * 1024) {
-            throw new RuntimeException('Het bestand mag maximaal 2 MB zijn.');
+            throw new InvalidArgumentException('Het bestand mag maximaal 2 MB zijn.');
         }
 
         $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
@@ -45,7 +45,14 @@ class ImageController
             $imageInfo === false ||
             $imageInfo['mime'] !== $allowedTypes[$extension]
         ) {
-            throw new RuntimeException('Kies een JPG-, PNG- of GIF-afbeelding.');
+            throw new InvalidArgumentException('Kies een JPG-, PNG- of GIF-afbeelding.');
+        }
+        
+        if (
+            class_exists('finfo') &&
+            (new finfo(FILEINFO_MIME_TYPE))->file($temporaryFile) !== $allowedTypes[$extension]
+        ) {
+            throw new InvalidArgumentException('Kies een JPG-, PNG- of GIF-afbeelding.');
         }
 
         return $this->storage->saveImage($temporaryFile, $extension);

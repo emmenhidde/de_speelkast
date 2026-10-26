@@ -28,7 +28,7 @@
 - ImageController.php - Afbeeldingen controleren en via StorageInterface uploaden
 - EveningListController.php - Valideert ingeladen XML en maakt de avondlijst via XSLT
 - NewGameController.php - Invoer controleren en een hoofdspel of uitbreiding laten opslaan
-- Arr2XMLController.php - Selectie of volledige kast exporteren, XML valideren en XSLT uitvoeren
+- Arr2XMLController.php - Selectie of volledige kast exporteren, XML -> XSD valideren
 - LogoutController.php - Session beëindgigen, tijdelijke foto opruimen en terugsturen naar login
 
 ## Extra
@@ -44,7 +44,7 @@ De kast heeft 4 subpagina's welke door PageController opgebouwd worden
     Meerdere uitbreidingen van een hoofdspel staan onder elkaar, gekoppeld aan het hoofdspel
     Hoofdspellen en uitbreidingen kunnen onafhankelijk worden geselecteerd
     - Mijn selectie toont losse uitbreidingen zonder hoofdspel onderaan rechts, met een melding dat het hoofdspel mist
-    Het exportformulier biedt de selectie of volledige kast als XML of HTML via XSLT
+    Het exportformulier biedt de selectie of volledige kast als XML. Avondlijst toont de ingeladen XML via XSLT.
     - Het toevoegformulier begint met Type: Hoofdspel of Uitbreiding
     Een hoofdspel krijgt een categorie. een uitbreiding wordt aan een bestaand hoofdspel gekoppeld.
     Beide typen gebruiken dezelfde invoervelden voor spelers, bordmaten en foto-upload

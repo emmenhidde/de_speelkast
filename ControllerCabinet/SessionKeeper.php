@@ -12,6 +12,8 @@ final class SessionKeeper
             return;
         }
 
+        session_name('speelkast_session');
+
         ini_set('session.gc_maxlifetime', (string) self::sessionDuration);
         ini_set('session.use_strict_mode', '1');
         ini_set('session.use_only_cookies', '1');
@@ -19,7 +21,7 @@ final class SessionKeeper
         $isSecure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
         session_set_cookie_params([
             'lifetime' => 0,
-            'path' => '/',
+            'path' => rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/indexFile.php')), '/') . '/',
             'domain' => '',
             'secure' => $isSecure,
             'httponly' => true,
@@ -31,14 +33,26 @@ final class SessionKeeper
         }
 
         $lastActivity = $_SESSION['last_activity'] ?? null;
-        if (array_key_exists('last_activity', $_SESSION) && (
+        $loginStarted = $_SESSION['login_started_at'] ?? null;
+        if (
+            (
+            array_key_exists('last_activity', $_SESSION) && (
             !is_int($lastActivity) ||
-            time() - $lastActivity > self::sessionDuration
-        )) {
-            (new FileStorage())->removeImage($_SESSION['pending_game_image'] ?? null);
-            session_regenerate_id(true);
-            $_SESSION = [];
-        }
+            time() - $lastActivity > self::sessionDuration) 
+            )||(
+            isset($_SESSION['username']) && (
+            !is_int($loginStarted) || 
+            time() - $loginStarted > self::sessionDuration)
+            )
+        )
+            {
+                (new FileStorage())->removeImage($_SESSION['pending_game_image'] ?? null);
+                $_SESSION = [];
+
+                if (!session_regenerate_id(true)) {
+                    throw new RuntimeException('De sessie kon niet worden vernieuwd.');
+                }
+            }
 
         $_SESSION['last_activity'] = time();
     }

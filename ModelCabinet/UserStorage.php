@@ -22,11 +22,17 @@ class UserStorage
         $statement = $this->connection->prepare(
             'INSERT INTO gamesusers (username, hashed_password) VALUES (:username, :hashed_password)'
         );
-
-        return $statement->execute([
-            'username' => $username,
-            'hashed_password' => $passwordHash,
-        ]);
+        try{
+            return $statement->execute([
+                'username' => $username,
+                'hashed_password' => $passwordHash,
+            ]);
+        } catch (PDOException $exception) {
+            if ((int) ($exception->errorInfo[1] ?? 0) === 1062) {
+                return false;
+            }
+            throw $exception;
+        }    
     }
 }
 

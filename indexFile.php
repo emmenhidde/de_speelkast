@@ -29,6 +29,8 @@ if (!is_string($page)) {
 }
 
 $loggedIn = isset($_SESSION['user_id'], $_SESSION['username'])
+    && is_int($_SESSION['user_id'])
+    && $_SESSION['user_id'] > 0
     && is_string($_SESSION['username']);
 
 if ($page === '') {
@@ -142,8 +144,9 @@ if ($page === 'avondlijst') {
             http_response_code(400);
             $message = $exception->getMessage();
         } catch (RuntimeException $exception) {
+            error_log($exception->getMessage());
             http_response_code(500);
-            $message = $exception->getMessage();
+            $message = 'De avondlijst kon niet worden geladen. Probeer het opnieuw.';
         }
     }
 
@@ -206,9 +209,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         } catch (InvalidArgumentException $exception) {
             http_response_code(400);
             exit($exception->getMessage());
-        } catch (RuntimeException $exception) {
-            http_response_code(500);
-            exit($exception->getMessage());
         }
     }
 
@@ -222,7 +222,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $fileStorage->removeImage($previousImage);
             $_SESSION['pending_game_image'] = $fileName;
             $gameFormMessage = 'Klik nu op "Voeg het spel toe aan de speelkast".';
-        } catch (RuntimeException $exception) {
+        } catch (InvalidArgumentException $exception) {
             http_response_code(400);
             $gameFormMessage = $exception->getMessage();
         }
@@ -279,14 +279,12 @@ $pageController->showCabinet(
     $page === 'add-game' ? $gameFormMessage : $message
 );
 
-} catch (RuntimeException | JsonException $exception) {
-    // Technische details gaan naar de serverlog
+} catch (Throwable $exception) {
     error_log($exception->getMessage());
-
     http_response_code(500);
     exit(
         'De speelkast kon niet worden geladen. '
-        . 'Controleer de database en serverlog.'
+        . 'Probeer het later opnieuw.'
     );
 }
 

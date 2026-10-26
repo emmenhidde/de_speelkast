@@ -5,10 +5,12 @@ require_once __DIR__ . '/CabinetItem.php';
 class ExpansionSet extends CabinetItem
 {
     public int $baseGame;
+    public string $titleBaseGame;
 
     public function __construct(array $item)
     {
         $this->baseGame = (int) $item['base_game'];
+        $this->titleBaseGame = (string) ($item['base_game_title']?? 'Onbekend');
 
         parent::__construct(
             (int) $item['id'],
@@ -25,7 +27,7 @@ class ExpansionSet extends CabinetItem
 
     public function description(): string
     {
-        return 'Dit is een uitbreidingsset (hoofdspel-ID: ' . $this->baseGame . ')';
+        return 'Dit is een uitbreidingsset (hoofdspel: ' . $this->titleBaseGame . ')';
     }
 
 }

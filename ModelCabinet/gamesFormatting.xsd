@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:simpleType name="requiredText">
+        <xs:restriction base="xs:token">
+            <xs:minLength value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
 
     <!-- Alleen de bestaande categorieën zijn toegestaan -->
     <xs:simpleType name="categoryType">
@@ -17,8 +22,8 @@
         <xs:all>
             <xs:element name="id" type="xs:positiveInteger"/>
             <xs:element name="category" type="categoryType"/>
-            <xs:element name="title" type="xs:string"/>
-            <xs:element name="photo_path" type="xs:string"/>
+            <xs:element name="title" type="requiredText"/>
+            <xs:element name="photo_path" type="requiredText"/>
             <xs:element name="min_max_players" type="xs:string"/>
             <xs:element name="is_board_game" type="xs:boolean"/>
             <xs:element name="board_format" type="xs:string"/>
@@ -31,8 +36,8 @@
         <xs:all>
             <xs:element name="id" type="xs:positiveInteger"/>
             <xs:element name="base_game" type="xs:positiveInteger"/>
-            <xs:element name="extension_name" type="xs:string"/>
-            <xs:element name="extend_photo_path" type="xs:string"/>
+            <xs:element name="extension_name" type="requiredText"/>
+            <xs:element name="extend_photo_path" type="requiredText"/>
             <xs:element name="min_max_extend_players" type="xs:string"/>
             <xs:element name="extend_is_boardgame" type="xs:boolean"/>
             <xs:element name="extend_board_size" type="xs:string"/>

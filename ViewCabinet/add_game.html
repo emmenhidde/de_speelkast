@@ -8,7 +8,7 @@
     </select>
     <br>
     <label for="game-title">Spelnaam:</label>
-    <input id="game-title" name="title" type="text" maxlength="255" pattern="[A-Za-z0-9 .,;:_?| -]+" value="{{game_title}}" required>
+    <input id="game-title" name="title" type="text" maxlength="255" pattern="[A-Za-z0-9 .,;:_?\|\-]+" value="{{game_title}}" required>
     <!-- Dropdown menus-->
     <fieldset id="category-fields">
         <legend>Categorie</legend>
@@ -156,13 +156,20 @@
         image.setCustomValidity('');
 
         if (action === 'upload_game_image') {
-            if (image.files.length === 0) {
-                event.preventDefault();
+            const file = image.files[0];
+            if (!file) {
                 image.setCustomValidity('Selecteer eerst een doosfoto.');
+            } else if (file.size === 0 || file.size > 2 * 1024 * 1024) {
+                image.setCustomValidity('Kies een niet-lege foto van maximaal 2 MB.');
+            } else if (!/\.(jpe?g|png|gif)$/i.test(file.name)) {
+                image.setCustomValidity('Kies een JPG-, PNG- of GIF-afbeelding.');
+            }
+            if (!image.checkValidity()) {
+                event.preventDefault();
                 image.reportValidity();
             }
             return;
-        }
+        }     
 
         // Wijst een titel met uitsluitend spaties ook aan de clientkant af.
         const title = document.getElementById('game-title');
