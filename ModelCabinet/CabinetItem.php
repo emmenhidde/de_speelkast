@@ -33,7 +33,17 @@ abstract class CabinetItem implements PhotoInterface
 
     public function showImage(): string
     {
-        return $this->photoPath;
+        if (!$this->checkFileName($this->photoPath)) {
+            return 'Geen geldige doosfoto beschikbaar.';
+        }
+
+        $path = htmlspecialchars(
+            $this->photoPath, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+        $title = htmlspecialchars(
+            $this->title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+        return '<img src="' . $path . '" alt="Doos: ' . $title . '" width="100">';
     }
 
     protected function decodeSelectionList(string $json): array

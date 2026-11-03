@@ -1,5 +1,8 @@
 <?php
 
+require_once __DIR__ . '/BoardGame.php';
+require_once __DIR__ . '/ExpansionSet.php';
+
 class ItemStorage
 {
     // Bewaart één PDO-verbinding voor alle spel- en selectiequeries
@@ -26,12 +29,12 @@ class ItemStorage
     }
 
 // Controleert het hoofdspel en slaat daarna de uitbreiding op
-public function addExtension(array $item): int
+public function addExtension(ExpansionSet $item): int
 {
     $statement = $this->pdo->prepare(
         'SELECT id FROM gamesitems WHERE id = ?'
     );
-    $statement->execute([$item['base_game']]);
+    $statement->execute([$item->baseGame]);
 
     if ($statement->fetchColumn() === false) {
         throw new InvalidArgumentException('Kies een bestaand hoofdspel.');
@@ -45,13 +48,15 @@ public function addExtension(array $item): int
          VALUES (?, ?, ?, ?, ?, ?, ?)'
     );
     $statement->execute([
-        $item['base_game'],
-        $item['extension_name'],
-        $item['extend_photo_path'],
-        $item['min_max_extend_players'],
-        $item['extend_is_boardgame'],
-        $item['extend_board_size'],
-        $item['owner_extension']
+        $item->baseGame,
+        $item->title,
+        $item->photoPath,
+        json_encode($item->minMaxPlayers, JSON_THROW_ON_ERROR),
+        (int) $item->isBoardGame,
+        $item->boardFormat === null
+            ? null
+            : json_encode($item->boardFormat, JSON_THROW_ON_ERROR),
+        $item->owner
     ]);
 
     return (int) $this->pdo->lastInsertId();
@@ -143,7 +148,7 @@ public function addExtension(array $item): int
     }
 
     // Slaat uitsluitend de gegevens van een hoofdspel op.
-    public function add(array $item): int
+    public function add(BoardGame $item): int
     {
         $statement = $this->pdo->prepare(
             'INSERT INTO gamesitems
@@ -152,13 +157,15 @@ public function addExtension(array $item): int
             VALUES (?, ?, ?, ?, ?, ?, ?)'
         );
         $statement->execute([
-            $item['category'],
-            $item['title'],
-            $item['photo_path'],
-            $item['min_max_players'],
-            $item['is_board_game'],
-            $item['board_format'],
-             $item['owner_main']
+            $item->category,
+            $item->title,
+            $item->photoPath,
+            json_encode($item->minMaxPlayers, JSON_THROW_ON_ERROR),
+            (int) $item->isBoardGame,
+            $item->boardFormat === null
+                ? null
+                : json_encode($item->boardFormat, JSON_THROW_ON_ERROR),
+            $item->owner
         ]);
 
         return (int) $this->pdo->lastInsertId();

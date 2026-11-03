@@ -93,12 +93,7 @@ class ItemController
                         : $this->formatPair($cabinetItem->boardFormat) . ' cm');
             }
 
-            $photoPath = $cabinetItem->showImage();
-
-            $image = $cabinetItem->checkFileName($photoPath)
-                ? '<img src="' . $this->escape($photoPath)
-                    . '" alt="Doos: ' . $title . '" width="100">'
-                : 'Geen geldige doosfoto beschikbaar.';
+            $image = $cabinetItem->showImage();
 
             // Beide soorten behouden hun eigen selectielijst
             $selectionName = $isExtension

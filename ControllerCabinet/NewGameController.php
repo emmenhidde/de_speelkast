@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../ModelCabinet/ItemStorage.php';
 require_once __DIR__ . '/../ModelCabinet/BoardGame.php';
+require_once __DIR__ . '/../ModelCabinet/ExpansionSet.php';
 
 class NewGameController
 {
@@ -48,15 +49,19 @@ class NewGameController
 
         // Een uitbreiding krijgt een eigen foto en een hoofdspel-ID.
         if ($itemKind === 'extension') {
-            return $this->itemStorage->addExtension([
-                'base_game' => $this->positiveInteger($input['base_game'] ?? null,'Hoofdspel'),
+            return $this->itemStorage->addExtension(new ExpansionSet([
+                'id' => 0,
+                'base_game' => $this->positiveInteger(
+                    $input['base_game'] ?? null,
+                    'Hoofdspel'
+                ),
                 'extension_name' => $title,
                 'extend_photo_path' => $photoPath,
                 'min_max_extend_players' => $playersJson,
                 'extend_is_boardgame' => $isBoardGame ? 1 : 0,
                 'extend_board_size' => $boardJson,
                 'owner_extension' => $owner
-            ]);
+            ]));
         }
 
         // Alleen hoofdspellen krijgen een categorie.
@@ -65,7 +70,8 @@ class NewGameController
             throw new InvalidArgumentException('Kies een geldige categorie.');
         }
 
-        return $this->itemStorage->add([
+        return $this->itemStorage->add(new BoardGame([
+            'id' => 0,
             'category' => $category,
             'title' => $title,
             'photo_path' => $photoPath,
@@ -73,7 +79,7 @@ class NewGameController
             'is_board_game' => $isBoardGame ? 1 : 0,
             'board_format' => $boardJson,
             'owner_main' => $owner
-        ]);
+        ]));
     }
 
     private function validatedText(array $input, string $key, int $maximumLength, string $label): string
