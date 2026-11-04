@@ -1,10 +1,12 @@
 <?php
 
-// Laadt de classes die het centrale startpunt nodig heeft
-require_once __DIR__ . '/ControllerCabinet/SessionKeeper.php';
+// Models
 require_once __DIR__ . '/ModelCabinet/DbConnect.php';
 require_once __DIR__ . '/ModelCabinet/UserStorage.php';
 require_once __DIR__ . '/ModelCabinet/ItemStorage.php';
+require_once __DIR__ . '/ModelCabinet/FileStorage.php';
+// Controllers
+require_once __DIR__ . '/ControllerCabinet/SessionKeeper.php';
 require_once __DIR__ . '/ControllerCabinet/AuthController.php';
 require_once __DIR__ . '/ControllerCabinet/LogoutController.php';
 require_once __DIR__ . '/ControllerCabinet/ItemController.php';
@@ -13,6 +15,7 @@ require_once __DIR__ . '/ControllerCabinet/ImageController.php';
 require_once __DIR__ . '/ControllerCabinet/PageController.php';
 require_once __DIR__ . '/ControllerCabinet/Arr2XMLController.php';
 require_once __DIR__ . '/ControllerCabinet/EveningListController.php';
+
 
 // Maakt de controller die de HTML-pagina's gaat opbouwen
 try {

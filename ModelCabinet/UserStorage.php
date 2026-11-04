@@ -1,6 +1,13 @@
 <?php
 
-class UserStorage
+interface UserInterface
+{
+    public function findByUsername(string $username): ?array;
+
+    public function createUser(string $username, string $passwordHash): bool;
+}
+
+class UserStorage implements UserInterface
 {
     public function __construct(private PDO $connection
     ) {

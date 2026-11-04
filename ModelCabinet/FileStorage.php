@@ -1,12 +1,12 @@
 <?php
 
 // Contract voor opslag met een unieke bestandsnaam.
-interface StorageInterface
+interface FileInterface
 {
     public function saveImage(string $temporaryFile, string $extension): string;
 }
 
-class FileStorage implements StorageInterface
+class FileStorage implements FileInterface
 {
     public function __construct(
         private string $uploadDir = __DIR__ . '/../upload/'

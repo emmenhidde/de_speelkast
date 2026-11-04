@@ -6,7 +6,7 @@ require_once __DIR__ . '/../ModelCabinet/ExpansionSet.php';
 
 class ItemController
 {
-    public function __construct(private ItemStorage $itemStorage)
+    public function __construct(private ItemInterface $itemStorage)
     {
     }
 

@@ -3,7 +3,22 @@
 require_once __DIR__ . '/BoardGame.php';
 require_once __DIR__ . '/ExpansionSet.php';
 
-class ItemStorage
+interface ItemInterface
+{
+    public function findAll(): array;
+
+    public function findAllExtensions(): array;
+
+    public function findSelectedGameIds(string $username, bool $extensions = false): array;
+
+    public function saveSelectedGameIds(string $username, array $gameIds, array $extensionIds): void;
+
+    public function add(BoardGame $item): int;
+
+    public function addExtension(ExpansionSet $item): int;
+}
+
+class ItemStorage implements ItemInterface
 {
     // Bewaart één PDO-verbinding voor alle spel- en selectiequeries
     public function __construct(private PDO $pdo)

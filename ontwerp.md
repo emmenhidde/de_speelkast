@@ -1,13 +1,13 @@
 # Opzet Speelkast
 
 ## Model
-- DbConnect.php - PDO-verbinding met MySQL
-- CabinetItem.php - Abstract item met gedeelde gegevens, eigenaar en fotomethode
+- DbConnect.php - Pakt de DB instellingen uit .env en maakt PDO-verbinding met MySQL
+- CabinetItem.php - Abstract item met gedeelde gegevens, eigenaar en fotocontrole
 - BoardGame.php - Subclass voor bordspellen
 - ExpansionSet.php - Subclass voor uitbreiding met hoofdspel-ID
-- UserStorage.php - Gebruikers ophalen uit DB
-- ItemStorage.php - Hoofdspellen, uitbreidingen, eigenaars en accountselecties ophalen en opslaan
-- FileStorage.php - StorageInterface en FileStorage, handeling van uploads tijdelijke foto's
+- UserStorage.php - UserInterface Gebruikers ophalen uit DB
+- ItemStorage.php - ItemInterface Hoofdspellen, uitbreidingen, eigenaars en accountselecties ophalen en opslaan
+- FileStorage.php - FileInterface en FileStorage, handeling van uploads tijdelijke foto's
 - games Formatting.xsd - Controleert de vulling van de XML-export
 
 ## View
@@ -25,16 +25,18 @@
 - SessionKeeper.php - Sessie starten, geldigheid controleren en sessie wissen
 - PageController.php - Views kiezen, gegevens verzamelen en pagina's opbouwen
 - ItemController.php - Selectielijsten verwerken en hoofdspellen met uitbreidingen groeperen
-- ImageController.php - Afbeeldingen controleren en via StorageInterface uploaden
+- ImageController.php - Afbeeldingen controleren en via FileInterface uploaden
 - EveningListController.php - Valideert ingeladen XML en maakt de avondlijst via XSLT
 - NewGameController.php - Invoer controleren en een hoofdspel of uitbreiding laten opslaan
 - Arr2XMLController.php - Selectie of volledige kast exporteren, XML -> XSD valideren
 - LogoutController.php - Session beëindgigen, tijdelijke foto opruimen en terugsturen naar login
 
 ## Extra
-- indexFile.php - Centraal startpunt voor routes, toegangscontrole en formulieracties
+- indexFile.php - Centraal startpunt voor routes, toegangscontrole en formulieracties. Geeft objecten door aan Controllers
 - /upload/ - Opslaglocatie van afbeeldingen
 - ontwerp.md - Beschrijving van structuur en functionaliteit
+- configuration/.env - Bevat de local DB gegvens
+- configuration/.env.voorbeeld - Voorbeeldbestand hoe databasegegevens in de .env staan
 
 
 ## Paginagebruik

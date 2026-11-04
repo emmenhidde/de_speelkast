@@ -6,7 +6,7 @@ require_once __DIR__ . '/SessionKeeper.php';
 class AuthController
 {
     public function __construct(
-        private UserStorage $userStorage
+        private UserInterface $userStorage
     ) {
     }
 
